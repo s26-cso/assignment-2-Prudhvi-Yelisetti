@@ -2,6 +2,7 @@
 iq_array:   .fill 100, 8, 0
 res_array:  .fill 100, 8, 0
 fmt_int:    .asciz "%ld "
+fmt_last:   .asciz "%ld"
 fmt_nl:     .asciz "\n"
 
 .section .text
@@ -101,19 +102,29 @@ save_res:
 print_setup:
     mv sp, x20               # Restore sp before calling printf
     li x21, 0                # i = 0
+    addi x24, x19, -1         # x24 = n-1 (the last index)
 
 print_loop:
     bge x21, x19, print_done
 
-    la x10, fmt_int
+    # load the values to print into x11
     la x5, res_array
     slli x6, x21, 3
     add x6, x5, x6
     ld x11, 0(x6)
+
+    # check if the current index is the last one
+    beq x21, x24, print_last_element
+
+    la x10, fmt_int
     call printf
 
     addi x21, x21, 1
     j print_loop
+
+print_last_element:
+    la x10, fmt_last
+    call printf
 
 print_done:
     la x10, fmt_nl
